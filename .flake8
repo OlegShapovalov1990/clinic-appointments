@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 88
+extend-ignore =
+    E203,
+    W503
+exclude =
+    .git,
+    .venv,
+    __pycache__,
+    alembic,
+    tests
+per-file-ignores =
+    # Игнорировать E402 (импорты не в начале файла) в __init__.py
+    __init__.py:E402
