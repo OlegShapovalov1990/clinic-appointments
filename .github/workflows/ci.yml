@@ -7,36 +7,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Set up Python 3.12
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-        
-    - name: Install system dependencies
-      run: sudo apt-get install -y libpq-dev python3-dev
-      
-    - name: Install modern Poetry
-      run: |
-        pip install --upgrade pip
-        pip install poetry==1.8.2  # Явно указываем стабильную версию
-        
-    - name: Validate Poetry installation
-      run: poetry --version
-      
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    - run: pip install poetry==1.8.2
-    - run: poetry install --only dev
-    - run: make lint
+    - name: Install system dependencies
+      run: sudo apt-get install -y libpq-dev python3-dev
+    - name: Install Poetry
+      run: pip install poetry==1.8.2
+    - name: Cache Poetry virtualenv
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: poetry-${{ hashFiles('pyproject.toml') }}
 
-  test:
+  lint_and_test:
     needs: setup
     runs-on: ubuntu-latest
     services:
@@ -54,6 +38,23 @@ jobs:
     - uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    - run: pip install poetry==1.8.2
-    - run: poetry install
-    - run: pytest -v --cov=app --cov-report=term-missing
+    - name: Install Poetry
+      run: pip install poetry==1.8.2
+    - name: Install dependencies
+      run: |
+        poetry install --all-extras
+        poetry show
+    - name: Run lint
+      run: |
+        black --check .
+        isort --check .
+        flake8 .
+    - name: Run tests
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: |
+        python -m pytest -v --cov=app --cov-report=term-missing
