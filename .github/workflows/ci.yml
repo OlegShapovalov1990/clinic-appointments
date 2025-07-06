@@ -1,0 +1,58 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install Poetry
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install
+    - name: Run lint
+      run: make lint
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install Poetry
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install
+    - name: Initialize test database
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: db
+        POSTGRES_PORT: 5432
+      run: |
+        python -c "from app.database import engine; from app.models import Base; Base.metadata.create_all(bind=engine)"
+    - name: Run tests
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: db
+        POSTGRES_PORT: 5432
+      run: make test
