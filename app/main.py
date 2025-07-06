@@ -10,7 +10,6 @@ from app.services import AppointmentService
 from app.exceptions import DoctorBusyException, AppointmentNotFoundException
 
 Base.metadata.create_all(bind=engine)
-print("Все таблицы созданы")
 
 app = FastAPI(
     title="Clinic Appointments API",

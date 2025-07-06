@@ -5,8 +5,10 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
 engine = create_engine(
-    settings.POSTGRES_URL,
+    settings.DATABASE_URL,
+    echo=True,
     pool_pre_ping=True,
+    pool_recycle=3600,
     pool_size=10,
     max_overflow=20
 )
