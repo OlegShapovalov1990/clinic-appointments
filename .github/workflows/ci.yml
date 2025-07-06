@@ -1,29 +1,44 @@
+# .github/workflows/ci.yml
+
 name: CI Pipeline
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-    - name: Install system dependencies
-      run: sudo apt-get install -y libpq-dev
-    - name: Install Poetry
-      run: pip install "poetry<1.2.0"
-    - name: Install project dependencies
-      run: poetry install --no-root
-    - name: Install dev dependencies
-      run: poetry install --dev
-    - name: Run lint
-      run: make lint
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Poetry (<1.2.0)
+        run: pip install "poetry<1.2.0"
+
+      - name: Install all dependencies
+        run: poetry install
+
+      - name: Run lint via Makefile
+        run: poetry run make lint
+
 
   test:
     needs: lint
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:17
@@ -33,32 +48,52 @@ jobs:
           POSTGRES_DB: testdb
         ports:
           - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
-    - name: Install system dependencies
-      run: sudo apt-get install -y libpq-dev
-    - name: Install Poetry
-      run: pip install poetry
-    - name: Install all dependencies
-      run: poetry install
-    - name: Initialize test database
-      env:
-        POSTGRES_USER: testuser
-        POSTGRES_PASSWORD: testpass
-        POSTGRES_DB: testdb
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-      run: |
-        python -c "from app.database import engine; from app.models import Base; Base.metadata.create_all(bind=engine)"
-    - name: Run tests
-      env:
-        POSTGRES_USER: testuser
-        POSTGRES_PASSWORD: testpass
-        POSTGRES_DB: testdb
-        POSTGRES_HOST: localhost
-        POSTGRES_PORT: 5432
-      run: pytest -v --cov=app --cov-report=term-missing
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+      - name: Install Poetry (<1.2.0)
+        run: pip install "poetry<1.2.0"
+
+      - name: Install all dependencies
+        run: poetry install
+
+      - name: Initialize test database
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+        run: |
+          python - <<-EOF
+          from app.database import engine
+          from app.models import Base
+          Base.metadata.create_all(bind=engine)
+          EOF
+
+      - name: Run tests via Makefile
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+        run: make test
+
