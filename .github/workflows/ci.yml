@@ -13,11 +13,11 @@ jobs:
     - name: Install system dependencies
       run: sudo apt-get install -y libpq-dev
     - name: Install Poetry
-      run: pip install poetry
+      run: pip install "poetry<1.2.0"
     - name: Install project dependencies
       run: poetry install --no-root
     - name: Install dev dependencies
-      run: poetry install --only dev
+      run: poetry install --dev
     - name: Run lint
       run: make lint
 
