@@ -13,7 +13,7 @@ jobs:
     - name: Install Poetry
       run: pip install poetry
     - name: Install dependencies
-      run: poetry install --with dev  
+      run: poetry install --with dev
     - name: Run lint
       run: make lint
 
@@ -38,22 +38,22 @@ jobs:
     - name: Install Poetry
       run: pip install poetry
     - name: Install dependencies
-      run: poetry install --with dev  # ← Также добавляем для тестов
+      run: poetry install --with dev
     - name: Initialize test database
       env:
         POSTGRES_USER: testuser
         POSTGRES_PASSWORD: testpass
         POSTGRES_DB: testdb
-        POSTGRES_HOST: db
+        POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
       run: |
         python -c "from app.database import engine; from app.models import Base; Base.metadata.create_all(bind=engine)"
+        python -c "from app.database import engine; print('Database URL:', engine.url)"
     - name: Run tests
       env:
         POSTGRES_USER: testuser
         POSTGRES_PASSWORD: testpass
         POSTGRES_DB: testdb
-        POSTGRES_HOST: db
+        POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
-      run: make test
       run: make test
