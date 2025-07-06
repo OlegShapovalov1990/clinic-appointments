@@ -1,9 +1,5 @@
 [tool.poetry]
-name = "clinic-appointments"
-version = "0.1.0"
-description = "Microservice for clinic appointments management"
-authors = ["Oleg <olega_djan@mail.ru>"]
-readme = "README.md"
+package-mode = false
 
 
 
