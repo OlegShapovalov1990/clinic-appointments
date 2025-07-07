@@ -51,7 +51,6 @@ jobs:
           poetry install --with dev
 
       - name: Initialize test database
-        shell: bash
         env:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
@@ -59,11 +58,9 @@ jobs:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
         run: |
-          python - <<EOF
-          from app.database import engine
-          from app.models import Base
-          Base.metadata.create_all(bind=engine)
-          EOF
+          poetry run python -c "from app.database import engine; \
+                                from app.models import Base; \
+                                Base.metadata.create_all(bind=engine)"
 
       - name: Run tests
         env:
