@@ -1,42 +1,56 @@
-.PHONY: lint test up down migrate initdb
+.PHONY: lint test up down migrate migration initdb help
 
-# Определяем ОС
+# Определение ОС (улучшенная версия)
 ifeq ($(OS),Windows_NT)
-    DOCKER_COMPOSE = docker-compose
-    DOCKER_EXEC = docker exec
-    MKDIR = mkdir
-    RM = del /Q
-    SLEEP = timeout
+    DOCKER_COMPOSE := docker-compose
+    DOCKER_EXEC := docker exec
+    RM := del /Q /S
 else
-    DOCKER_COMPOSE = docker compose
-    DOCKER_EXEC = docker compose exec
-    MKDIR = mkdir -p
-    RM = rm -f
-    SLEEP = sleep
+    DOCKER_COMPOSE := docker compose
+    DOCKER_EXEC := docker compose exec
+    RM := rm -rf
 endif
 
+# Общие команды
+SLEEP := $(if $(filter Windows_NT,$(OS)),timeout,sleep)
+MKDIR := $(if $(filter Windows_NT,$(OS)),mkdir,mkdir -p)
+
+## Команды
 lint:
-	poetry run black --check .
-	poetry run isort --check .
-	poetry run flake8 .
+	black --check .
+	isort --check .
+	flake8 .
 
-test:
-	poetry run pytest -v
+test:  ## Запустить тесты
+	@echo "Running tests..."
+	@poetry run pytest -v --cov=app --cov-report=term-missing
 
-up:
-	$(DOCKER_COMPOSE) up -d --build
+up:  ## Запустить сервисы
+	@echo "Starting services..."
+	@$(DOCKER_COMPOSE) up -d --build
 
-down:
-	$(DOCKER_COMPOSE) down
+down:  ## Остановить сервисы
+	@echo "Stopping services..."
+	@$(DOCKER_COMPOSE) down
 
-migrate:
-	$(DOCKER_EXEC) api alembic upgrade head
+migrate:  ## Применить миграции
+	@echo "Applying migrations..."
+	@$(DOCKER_EXEC) api alembic upgrade head
 
-migration:
-	$(DOCKER_EXEC) api alembic revision --autogenerate -m "$(m)"
+migration:  ## Создать миграцию (использование: make migration m="описание")
+	@if [ -z "$(m)" ]; then \
+		echo "Error: Migration message is required. Usage: make migration m=\"description\""; \
+		exit 1; \
+	fi
+	@$(DOCKER_EXEC) api alembic revision --autogenerate -m "$(m)"
 
-initdb:
-	$(DOCKER_COMPOSE) up -d db
-	$(SLEEP) 5
-	$(DOCKER_EXEC) db psql -U $${POSTGRES_USER} -d $${POSTGRES_DB} -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-	$(DOCKER_EXEC) api alembic upgrade head
+initdb:  ## Инициализировать БД
+	@echo "Initializing database..."
+	@$(DOCKER_COMPOSE) up -d db
+	@$(SLEEP) 5
+	@$(DOCKER_EXEC) db psql -U $${POSTGRES_USER} -d $${POSTGRES_DB} -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
+	@$(DOCKER_EXEC) api alembic upgrade head
+
+help:  ## Показать справку
+	@echo "Available commands:"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
