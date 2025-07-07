@@ -1,11 +1,9 @@
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.exceptions import AppointmentNotFoundException, DoctorBusyException
+from app.exceptions import AppointmentNotFoundException
 from app.models import Appointment
 from app.schemas import AppointmentCreate, AppointmentResponse
 

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import UUID, Column, DateTime, Integer, String, func
+from sqlalchemy import Column, DateTime, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.sql import text
 
