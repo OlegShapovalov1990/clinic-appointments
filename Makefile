@@ -17,9 +17,11 @@ MKDIR := $(if $(filter Windows_NT,$(OS)),mkdir,mkdir -p)
 
 ## Команды
 lint:
-	black --check .
-	isort --check .
-	flake8 .
+	@echo "Running linters..."
+	@poetry run black --check .
+	@poetry run isort --check .
+	@poetry run flake8 .
+
 
 test:  ## Запустить тесты
 	@echo "Running tests..."
