@@ -6,6 +6,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
@@ -17,11 +18,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.create false
           poetry install --with dev
 
       - name: Run lint
-        run: make lint    # теперь black/isort/flake8 доступны в PATH
+        run: make lint
 
   test:
     needs: lint
@@ -40,7 +40,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
+
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
@@ -52,7 +54,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry config virtualenvs.create false
           poetry install --with dev
 
       - name: Initialize test database
