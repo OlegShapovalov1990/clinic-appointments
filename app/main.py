@@ -1,13 +1,14 @@
 from uuid import UUID
-
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from fastapi.responses import JSONResponse
 
 from app.database import Base, engine, get_db
 from app.exceptions import AppointmentNotFoundException, DoctorBusyException
 from app.schemas import AppointmentCreate, AppointmentResponse
 from app.services import AppointmentService
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,42 +26,44 @@ app.add_middleware(
 )
 
 
+@app.exception_handler(DoctorBusyException)
+async def handle_doctor_busy(request, exc: DoctorBusyException):
+    return JSONResponse(
+        status_code=status.HTTP_409_CONFLICT,
+        content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(AppointmentNotFoundException)
+async def handle_not_found(request, exc: AppointmentNotFoundException):
+    return JSONResponse(
+        status_code=status.HTTP_404_NOT_FOUND,
+        content={"detail": str(exc)}
+    )
+
 @app.post(
     "/appointments",
     response_model=AppointmentResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def create_appointment(appointment: AppointmentCreate, db: Session = Depends(get_db)):
+def create_appointment(
+    appointment: AppointmentCreate,
+    db: Session = Depends(get_db),
+):
     service = AppointmentService(db)
-    try:
-        return service.create_appointment(appointment)
-    except DoctorBusyException as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Doctor {e.doctor_id} is already busy at {e.start_time}",
-        )
+    return service.create_appointment(appointment)
 
 
 @app.get("/appointments/{appointment_id}", response_model=AppointmentResponse)
-def get_appointment(appointment_id: UUID, db: Session = Depends(get_db)):
+def get_appointment(
+    appointment_id: UUID,
+    db: Session = Depends(get_db),
+):
     service = AppointmentService(db)
-    try:
-        return service.get_appointment(appointment_id)
-    except AppointmentNotFoundException as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Appointment with id {e.appointment_id} not found",
-        )
+    return service.get_appointment(appointment_id)
 
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-
-# def main():
-#     import uvicorn
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
-#
-# if __name__ == "__main__":
-#     main()
