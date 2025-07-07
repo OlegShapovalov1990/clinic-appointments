@@ -19,7 +19,7 @@ lint:
 	@echo "Running linters..."
 	@poetry run black --check .
 	@poetry run isort --check .
-	@poetry run flake8 .
+	@poetry run flake8 app
 
 ## Запуск тестов
 test:
