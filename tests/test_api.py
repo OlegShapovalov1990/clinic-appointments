@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime, timedelta
+
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
@@ -8,11 +10,13 @@ client = TestClient(app)
 
 def test_create_and_get_appointment():
     # Test data
-    start_time = datetime.now().replace(minute=0, second=0, microsecond=0) + timedelta(days=1)
+    start_time = datetime.now().replace(minute=0, second=0, microsecond=0) + timedelta(
+        days=1
+    )
     appointment_data = {
         "patient_name": "John Doe",
         "doctor_id": 1,
-        "start_time": start_time.isoformat()
+        "start_time": start_time.isoformat(),
     }
 
     # Create appointment

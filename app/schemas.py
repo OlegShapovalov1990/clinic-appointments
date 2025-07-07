@@ -1,6 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel, field_validator
 from uuid import UUID
+
+from pydantic import BaseModel, field_validator
 
 
 class AppointmentBase(BaseModel):
@@ -10,7 +11,7 @@ class AppointmentBase(BaseModel):
 
 
 class AppointmentCreate(AppointmentBase):
-    @field_validator('start_time')
+    @field_validator("start_time")
     def validate_start_time(cls, value):
         if value.minute not in (0, 30):
             raise ValueError("Appointments can only start at full or half hours")
