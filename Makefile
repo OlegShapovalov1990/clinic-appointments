@@ -27,31 +27,31 @@ test:
 	@poetry run pytest -v --cov=app --cov-report=term-missing
 
 up:
-    @echo "Starting services..."
-    @$(DOCKER_COMPOSE) up -d --build
+	@echo "Starting services..."
+	@$(DOCKER_COMPOSE) up -d --build
 
 down:
-    @echo "Stopping services..."
-    @$(DOCKER_COMPOSE) down
+	@echo "Stopping services..."
+	@$(DOCKER_COMPOSE) down
 
 migrate:
-    @echo "Applying migrations..."
-    @$(DOCKER_EXEC) api alembic upgrade head
+	@echo "Applying migrations..."
+	@$(DOCKER_EXEC) api alembic upgrade head
 
 migration:
-    @if [ -z "$(m)" ]; then \
+	@if [ -z "$(m)" ]; then \
       echo "Error: migration message required (make migration m=\"desc\")"; \
       exit 1; \
     fi
-    @$(DOCKER_EXEC) api alembic revision --autogenerate -m "$(m)"
+	@$(DOCKER_EXEC) api alembic revision --autogenerate -m "$(m)"
 
 initdb:
-    @echo "Initializing database..."
-    @$(DOCKER_COMPOSE) up -d db
-    @$(SLEEP) 5
-    @$(DOCKER_EXEC) db psql -U $${POSTGRES_USER} -d $${POSTGRES_DB} \
+	@echo "Initializing database..."
+	@$(DOCKER_COMPOSE) up -d db
+	@$(SLEEP) 5
+	@$(DOCKER_EXEC) db psql -U $${POSTGRES_USER} -d $${POSTGRES_DB} \
         -c "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-    @$(DOCKER_EXEC) api alembic upgrade head
+	@$(DOCKER_EXEC) api alembic upgrade head
 
 help:
     @echo "Available commands:"
