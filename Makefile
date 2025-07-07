@@ -17,8 +17,8 @@ MKDIR := $(if $(filter Windows_NT,$(OS)),mkdir,mkdir -p)
 ## Линтеры и авто-формат
 lint:
 	@echo "Running linters..."
-	@poetry run black --check .
-	@poetry run isort --check .
+	@poetry run black .
+	@poetry run isort .
 	@poetry run flake8 app
 
 ## Запуск тестов
