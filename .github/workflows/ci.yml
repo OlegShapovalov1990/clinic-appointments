@@ -57,6 +57,7 @@ jobs:
           POSTGRES_DB: testdb
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
+          DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
         run: |
           poetry run python -c "from app.database import engine; \
                                 from app.models import Base; \
