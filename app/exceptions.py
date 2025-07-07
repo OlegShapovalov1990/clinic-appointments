@@ -4,6 +4,7 @@ class DoctorBusyException(Exception):
         self.start_time = start_time
         super().__init__(f"Doctor {doctor_id} is busy at {start_time}")
 
+
 class AppointmentNotFoundException(Exception):
     def __init__(self, appointment_id: str):
         self.appointment_id = appointment_id
