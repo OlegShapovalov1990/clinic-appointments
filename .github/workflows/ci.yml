@@ -3,25 +3,22 @@ name: CI Pipeline
 on: [push, pull_request]
 
 jobs:
-  setup:
+  lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    - name: Install system dependencies
-      run: sudo apt-get install -y libpq-dev python3-dev
     - name: Install Poetry
-      run: pip install poetry==1.8.2
-    - name: Cache Poetry virtualenv
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pypoetry/virtualenvs
-        key: poetry-${{ hashFiles('pyproject.toml') }}
+      run: pip install poetry
+    - name: Install dependencies
+      run: poetry install --with dev
+    - name: Run lint
+      run: make lint
 
-  lint_and_test:
-    needs: setup
+  test:
+    needs: lint
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -39,17 +36,10 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install Poetry
-      run: pip install poetry==1.8.2
+      run: pip install poetry
     - name: Install dependencies
-      run: |
-        poetry install --all-extras
-        poetry show
-    - name: Run lint
-      run: |
-        black --check .
-        isort --check .
-        flake8 .
-    - name: Run tests
+      run: poetry install --with dev
+    - name: Initialize test database
       env:
         POSTGRES_USER: testuser
         POSTGRES_PASSWORD: testpass
@@ -57,4 +47,12 @@ jobs:
         POSTGRES_HOST: localhost
         POSTGRES_PORT: 5432
       run: |
-        python -m pytest -v --cov=app --cov-report=term-missing
+        python -c "from app.database import engine; from app.models import Base; Base.metadata.create_all(bind=engine)"
+    - name: Run tests
+      env:
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+        POSTGRES_DB: testdb
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: make test
