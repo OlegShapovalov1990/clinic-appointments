@@ -21,6 +21,8 @@ jobs:
   test:
     needs: lint
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
     services:
       postgres:
         image: postgres:17
